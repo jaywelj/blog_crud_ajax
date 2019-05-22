@@ -1,0 +1,15 @@
+{% for post in posts %}
+<div class="jumbotron mt-1" id="post_list_content" >
+	<div class="btn-group float-right" role="group" aria-label="Basic example">
+		<button type="button" class="btn btn-secondary btn-warning show-post-update-modal" data-url="{% url 'post_edit' post.pk %}">Edit</button>
+		<button type="button" class="btn btn-secondary btn-danger show-post-delete-modal" data-url="{% url 'post_delete' post.pk %}">Delete</button>
+		{% if not post.published_date %}
+			<button type="button" class="btn btn-secondary btn-dark show-post-publish-modal" data-url="{% url 'post_publish' post.pk %}">Publish</button>
+		{% endif %}
+		
+	</div>
+	<small class="text-muted">Date Created: {{ post.created_date }}</small>
+	<h1>{{ post.title }}</h1>
+	<p>{{ post.text }}</p>
+</div>
+{% endfor %}

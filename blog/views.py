@@ -13,7 +13,7 @@ from braces.views import JSONResponseMixin, LoginRequiredMixin
 
 from .forms import PostForm, CommentForm
 from .models import Post, Comment
-from .mixin import GetContextMixin
+from .mixin import GetPostContextMixin, GetCommentContextMixin
 
 class PostList(ListView):
 	queryset = Post.objects.filter(published_date__lte=timezone.now()).order_by('-pk')
@@ -45,7 +45,7 @@ class PostDraftList(LoginRequiredMixin, ListView):
 # 	model = Post
 # 	context_object_name = "post"
 
-class PostNew(LoginRequiredMixin, GetContextMixin, View):
+class PostNew(LoginRequiredMixin, GetPostContextMixin, View):
 	model = Post
 	form_class = PostForm
 	template = "blog/post_new.html"
@@ -79,7 +79,7 @@ class PostNew(LoginRequiredMixin, GetContextMixin, View):
 		return JsonResponse(self.data)
 
 
-class PostEdit(LoginRequiredMixin, GetContextMixin, View):
+class PostEdit(LoginRequiredMixin, GetPostContextMixin, View):
 	model = Post
 	form_class = PostForm
 	template = "blog/post_edit.html"
@@ -111,7 +111,7 @@ class PostEdit(LoginRequiredMixin, GetContextMixin, View):
 
 		return JsonResponse(self.data)
 
-class PostDelete(LoginRequiredMixin, GetContextMixin, View):
+class PostDelete(LoginRequiredMixin, GetPostContextMixin, View):
 	model = Post
 	form_class = PostForm
 	template = "blog/post_delete.html"
@@ -133,7 +133,7 @@ class PostDelete(LoginRequiredMixin, GetContextMixin, View):
 
 		return JsonResponse(self.data)
 
-class PostPublish(LoginRequiredMixin, GetContextMixin, DetailView):
+class PostPublish(LoginRequiredMixin, GetPostContextMixin, DetailView):
 	model = Post
 	form_class = PostForm
 	template = "blog/post_publish.html"
@@ -156,21 +156,101 @@ class PostPublish(LoginRequiredMixin, GetContextMixin, DetailView):
 
 		return JsonResponse(self.data)
 
-class PostDetail(JSONResponseMixin, DetailView):
-	model = Post
-	json_dumps_kwargs = {'indent': 2}
+class CommentNew(JSONResponseMixin, View):
+	model = Comment 
+	form_class = CommentForm
 	template = "blog/post_detail.html"
+	data = dict()
 
-	def get(self, request, *args, **kwargs):
-		self.object = self.get_object()
-
-		context = {"post": self.object}
-		context["comments"] = Comment.objects.filter(post=self.object)
-		data = {
+	def get(self, request, pk):
+		post = get_object_or_404(Post, pk=pk)
+		comments = self.model.objects.filter(post=post).order_by("created_date")
+		context = {
+			"post": post,
+			"comments": comments,
+			"form": self.form_class(),
+			"csrf_token_value": request.COOKIES['csrftoken'],
+		}
+		self.data = {
 			"html_form": render_to_string(self.template, context, request=request)
 		}
 
-		return self.render_json_response(data)
+		return self.render_json_response(self.data)
+
+	def post(self, request, pk):
+		form = self.form_class(request.POST)
+		post = get_object_or_404(Post, pk=pk)
+		comments = self.model.objects.filter(post=post).order_by("created_date")
+		csrf_token_value = request.COOKIES['csrftoken']
+		context = {
+			"post": post,
+			"comments": comments,
+			"form": self.form_class(),
+			"csrf_token_value": csrf_token_value,
+			"user": request.user,
+			"request": request,
+		}
+
+		if form.is_valid():
+			new_comment = form.save(commit=False)
+			new_comment.post = post
+			new_comment.save()
+			
+			self.data["form_is_valid"] = True
+			self.data["html_form"] = render_to_string("blog/post_detail.html", context)
+
+		else:
+			self.data["form_is_valid"] = False
+			self.data["html_form"] = render_to_string(self.template, context, request=request)
+
+		return JsonResponse(self.data)
+
+class CommentRemove(GetCommentContextMixin, LoginRequiredMixin, View):
+	model = Comment
+	form_class = CommentForm
+	template = "blog/comment_delete.html"
+	data = dict()
+
+	def post(self, request, ppk, cpk):
+		comment = get_object_or_404(self.model, pk=cpk)
+		comment.delete()
+		context = self.get_object(request, ppk)
+		self.data["form_is_valid"] = True
+		self.data["html_form"] = render_to_string("blog/post_detail.html", context)
+		
+		return JsonResponse(self.data)
+
+class CommentFlag(GetCommentContextMixin, LoginRequiredMixin, DetailView):
+	model = Comment
+	form_class = CommentForm
+	template = "blog/comment_delete.html"
+	data = dict()
+
+	def post(self, request, ppk, cpk):
+		comment = get_object_or_404(self.model, pk=cpk)
+		comment.flag = True
+		comment.save()
+		context = self.get_object(request, ppk)
+		self.data["form_is_valid"] = True
+		self.data["html_form"] = render_to_string("blog/post_detail.html", context)
+		
+		return JsonResponse(self.data)
+
+class CommentRemoveFlag(GetCommentContextMixin, LoginRequiredMixin, DetailView):
+	model = Comment
+	form_class = CommentForm
+	template = "blog/comment_delete.html"
+	data = dict()
+
+	def post(self, request, ppk, cpk):
+		comment = get_object_or_404(self.model, pk=cpk)
+		comment.flag = False
+		comment.save()
+		context = self.get_object(request, ppk)
+		self.data["form_is_valid"] = True
+		self.data["html_form"] = render_to_string("blog/post_detail.html", context)
+		
+		return JsonResponse(self.data)
 
 class AccountLogin(LoginView, JSONResponseMixin):
 	template = "registration/login.html"
@@ -183,44 +263,6 @@ class AccountLogin(LoginView, JSONResponseMixin):
 		}
 
 		return self.render_json_response(data)
-
-class CommentNew(LoginRequiredMixin, ListView):
-	model = Comment 
-	form_class = CommentForm
-	template = "blog/comment_new.html"
-	data = dict()
-
-	def post(self, request, pk):
-		form = self.form_class(request.POST)
-		if form.is_valid():
-			post = get_object_or_404(Post, pk=pk)
-			new_comment = form.save(commit=False)
-			new_comment.post = post
-			new_comment.save()
-			comments = Comment.objects.filter(post=post).filter(flag=False)
-			context = {
-				"post": post,
-				"comments": comments,
-			}
-			self.data["form_is_valid"] = True
-			self.data["post_content"] = render_to_string("blog/post_detail.html", context)
-
-		else:
-			self.data["form_is_valid"] = False
-
-		context = {
-		"form": form,
-		}
-		self.data["html_form"] = render_to_string(self.template, context, request=request)
-
-		return JsonResponse(self.data)
-
-	def get(self, request, pk):
-		form = self.form_class()
-		context = {"form": form}
-		self.data["html_form"] = render_to_string(self.template, context, request=request)
-
-		return JsonResponse(self.data)
 
 
 

@@ -1,26 +1,45 @@
 {% load crispy_forms_tags %}
 <div class="modal-header">
-	<h5 class="modal-title">{{ post.title }}</h5>
+	<h5 class="modal-title"><strong>Comments</strong></h5>
 	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
 		<span aria-hidden="true">&times;</span>
 	</button>
 </div>
 <div class="modal-body">
-	<p>{{ post.text }}</p>
-	<div class="card w-100">
-		<div class="card-header">
-			Comments
-		</div>
-		<ul class="list-group list-group-flush ">
-			{% for comment in comments %}
-			<li class="list-group-item"><strong>{{ comment.author }}</strong>:{{ comment.text }}<span class="float-right text-muted">{{ comment.created_date }}</span></li>
-			{% endfor %}
-			<div class="comment-input">
-				<form method="post" data-url="{% url 'comment_new' post.pk %}" id="comment_new_form" class="comment-new-form">
-					
-				</form>
-			</div>
-		</ul>
+	{% for comment in comments %}
+		{% if comment.post.author == request.user or not comment.flag %}
+			<li class="list-group-item">
+				<strong>{{ comment.author }}</strong>:{{ comment.text }}
+				<span class="float-right text-muted">{{ comment.created_date }}
+					{% if user.is_authenticated and post.author == request.user %}
+						<span class="btn-comment-action">
+							{% if comment.flag %}
+								<form method="post" data-url="{% url 'comment_remove_flag' post.pk comment.pk %}" id="comment_remove_flag_form" class="d-inline-block " >
+									<input class="d-none" type='hidden' name='csrfmiddlewaretoken' value='{{ csrf_token_value }}'/>
+									<input type="submit" value="allow" class="btn btn-sm btn-success show-remove-flag-comment" >
+								</form>
+							{% else %}
+								<form method="post" data-url="{% url 'comment_flag' post.pk comment.pk %}" id="comment_flag_form" class="d-inline-block " >
+									<input class="d-none" type='hidden' name='csrfmiddlewaretoken' value='{{ csrf_token_value }}'/>
+									<input type="submit" value="flag" class="btn btn-sm btn-warning show-flag-comment" >
+								</form>
+							{% endif %}
+							<form method="post" data-url="{% url 'comment_remove' post.pk comment.pk %}" id="comment_remove_form" class="d-inline-block">
+								<input class="d-none" type='hidden' name='csrfmiddlewaretoken' value='{{ csrf_token_value }}'/>
+								<input type="submit" value="&times;" class="btn btn-sm btn-danger show-remove-comment" title="remove">
+							</form>
+						</span>
+					{% endif %}
+				</span>
+			</li>
+		{% endif %}
+	{% endfor %}
+	<div class="comment-input">
+		<form method="post" data-url="{% url 'comment_new' post.pk %}" id="comment_new_form" class="comment-new-form">
+			<input class="d-none" type='hidden' name='csrfmiddlewaretoken' value='{{ csrf_token_value }}'/>
+			{{ form.author }}{{ form.text }}
+			<input type="submit" class="d-none">
+		</form>
 	</div>
 </div>
 <div class="modal-footer">

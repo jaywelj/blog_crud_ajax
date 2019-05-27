@@ -1,7 +1,7 @@
 <h1>{{ page_title }}</h1>
 <hr>
 {% for post in posts %}
-<div class="jumbotron mt-1" id="post_list_content" >
+<div class="jumbotron p-5" id="post_list_content" >
 	{% if user.is_authenticated and post.author == request.user %}
 		<div class="btn-group float-right" role="group" aria-label="Basic example">
 			<button type="button" class="btn btn-secondary btn-warning show-post-update-modal" data-url="{% url 'post_edit' post.pk %}">Edit</button>
@@ -11,8 +11,17 @@
 			{% endif %}
 		</div>
 	{% endif %}
-	<small class="text-muted">Date Created: {{ post.created_date }}</small>
-	<h1><a class="text-dark show-post-detail-modal" href="#" data-url="{% url 'post_detail' post.pk %}" data-url2="{% url 'comment_new' post.pk %}">{{ post.title }}</a></h1>
+	<small class="text-muted">Date Published: {{ post.published_date }}</small>
+	<h1>{{ post.title }}</h1>
+	<blockquote class="blockquote mb-0">
+		<footer class="blockquote-footer text-right"> 
+			<cite title="Source Title">{{ post.author.first_name }} {{ post.author.last_name }}</cite>
+		</footer>
+	</blockquote>
+	<hr>
 	<p>{{ post.text }}</p>
+	<hr>
+	<a class="btn btn-dark btn-sm float-right show-post-comment-modal " href="#" data-url="{% url 'comment_new' post.pk %}" >Comments</a>
+
 </div>
 {% endfor %}

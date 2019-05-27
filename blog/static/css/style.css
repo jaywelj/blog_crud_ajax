@@ -2,3 +2,7 @@
     padding: 0.25rem .75rem;
     font-size: 12px;
 }
+.btn-comment-action input{
+	padding: 0rem .5rem;
+    font-size: .825rem;
+}

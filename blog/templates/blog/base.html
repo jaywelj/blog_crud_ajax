@@ -8,6 +8,7 @@
 
 	<!-- Bootstrap CSS -->
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+	<link rel="stylesheet" href="{% static 'css/style.css' %}">
 
 
 	<title > Travel Blog</title>
@@ -25,17 +26,27 @@
 				<a class="nav-item nav-link" href="{% url 'post_list' %}">Home <span class="sr-only"></span></a>
 				<a class="nav-item nav-link" href="{% url 'post_draft_list' %}">Drafts <span class="sr-only"></span></a>
 				<a class="nav-item nav-link show-post-new-modal" href="#" data-url="{% url 'post_new' %}">Create <span class="sr-only"></span></a>
+				{% if user.is_authenticated %}
+					<a class="nav-item nav-link" href="{% url 'logout' %}" >Logout <span class="sr-only"></span></a>
+				{% else %}
+					<a class="nav-item nav-link show-login-modal" href="#" data-url="{% url 'login' %}" >  Login <span class="sr-only"></span></a>
+				{% endif %}
 			</div>
 		</div>
+
 	</nav>
 	<div class="container pt-3">
 		{% block container %}
 		{% endblock %}
 	</div>
 
-
-	
-	
+	<!-- Modal -->
+	<div class="modal fade" id="post_new_modal">
+		<div class="modal-dialog modal-lg" role="document">
+			<div class="modal-content">
+			</div>
+		</div>
+	</div>
 
 
 
@@ -45,6 +56,7 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js" integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q" crossorigin="anonymous"></script>
 	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js" integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl" crossorigin="anonymous"></script>
 	<script src="{% static 'js/plugin.js' %}"></script>
+
 
 
 </body>

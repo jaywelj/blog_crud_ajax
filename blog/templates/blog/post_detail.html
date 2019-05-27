@@ -1,0 +1,29 @@
+{% load crispy_forms_tags %}
+<div class="modal-header">
+	<h5 class="modal-title">{{ post.title }}</h5>
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close">
+		<span aria-hidden="true">&times;</span>
+	</button>
+</div>
+<div class="modal-body">
+	<p>{{ post.text }}</p>
+	<div class="card w-100">
+		<div class="card-header">
+			Comments
+		</div>
+		<ul class="list-group list-group-flush ">
+			{% for comment in comments %}
+			<li class="list-group-item"><strong>{{ comment.author }}</strong>:{{ comment.text }}<span class="float-right text-muted">{{ comment.created_date }}</span></li>
+			{% endfor %}
+			<div class="comment-input">
+				<form method="post" data-url="{% url 'comment_new' post.pk %}" id="comment_new_form" class="comment-new-form">
+					
+				</form>
+			</div>
+		</ul>
+	</div>
+</div>
+<div class="modal-footer">
+	<button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+</div>
+

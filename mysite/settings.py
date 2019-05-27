@@ -125,3 +125,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+LOGIN_URL = '/posts/list'
+LOGOUT_URL = '/posts/list'
+LOGIN_REDIRECT_URL = "/posts/list"
+LOGOUT_REDIRECT_URL = "/posts/list"

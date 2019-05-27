@@ -6,16 +6,11 @@ $(document).ready(function(){
 			type: "get",
 			url: btn.attr("data-url"),
 			dataType: "json",
-			// data: {
-			// 	title: $("#id_title").val(),
-			// 	text: $("#id_text").val(),
-			// 	csrfmiddlewaretoken: $("input[name='csrfmiddlewaretoken']").val(),
-			// },
 			beforeSend:function(){
-				$("#post_new_modal").modal("show");
 			},
 			success:function(data){
 				$("#post_new_modal .modal-content").html(data.html_form)
+				$("#post_new_modal").modal("show");
 			}
 		})
 	}
@@ -28,13 +23,13 @@ $(document).ready(function(){
 			data: form.serialize(),
 			dataType: "json",
 			beforeSend:function(){
-				console.log(form.attr("data-url"))
+				console.log(form.serialize())
 			},
 			success:function(data){
 				if (data.form_is_valid){
 					$(".post-content").html(data.post_content);
 					$("#post_new_modal").modal("hide");
-					// update post
+					// update post_
 				}
 				else{
 					$("#post_new_modal .modal-content").html(data.html_form)
@@ -44,20 +39,44 @@ $(document).ready(function(){
 		})
 		return false
 	}
-	$(document).on("click",".publish-btn",function(e){
-		pk = $(this).attr("id")
+	var show_comment_box = function(){
+		btn = $(this)
 		$.ajax({
-			type: "GET",
-			url: "",
-			data: {
-				'pk': pk,
+			type: "get",
+			url: btn.attr("data-url2"),
+			dataType: "json",
+			beforeSend:function(){
 			},
-			success:function(){
-				alert("Post Published!");
-				$("#post_"+pk).fadeOut(300);
+			success:function(data){
+				$(".list-group .comment-input .comment-new-form").html(data.html_form)
 			}
 		})
-	})
+	}
+	var comment_save = function(){
+		var form = $(this);
+		$.ajax({
+			type: form.attr("method"),
+			url: form.attr("data-url"),
+			data: form.serialize(),
+			dataType: "json",
+			beforeSend:function(){
+				console.log(form.serialize())
+			},
+			success:function(data){
+				if (data.form_is_valid){
+					$("#post_new_modal .modal-content").html(data.post_content);
+					$(".list-group .comment-input .comment-new-form").html(data.html_form)
+				}
+				else{
+					$("#post_new_modal .modal-content").html(data.html_form)
+				}
+
+			}
+		})
+		return false
+	}
+	// login
+	$(".show-login-modal").click(show_modal)
 
 	// create post
 	$(".show-post-new-modal").click(show_modal)
@@ -74,4 +93,12 @@ $(document).ready(function(){
 	// publish post
 	$(".post-content").on("click",".show-post-publish-modal", show_modal)
 	$("#post_new_modal").on("submit","#post_publish_form", post_save)
+
+	// publish post
+	$(".post-content").on("click",".show-post-detail-modal", show_modal)
+
+	// create comment
+	$(".post-content").on("click",".show-post-detail-modal", show_comment_box)
+	$("#post_new_modal").on("submit","#comment_new_form", comment_save)
+
 })

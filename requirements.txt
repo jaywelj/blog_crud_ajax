@@ -1,4 +1,4 @@
-Django==1.11.20
+Django==1.11.23
 django-braces==1.11.0
 django-crispy-forms==1.7.2
 psycopg2==2.8.2
